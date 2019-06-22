@@ -178,7 +178,7 @@ class getAllRewards(Resource):
 
 class getAllHobbies(Resource):
     def get(self):
-        return {'message': reward_schema_list.dump(Reward.query.all())}        
+        return {'message': hobby_schema_list.dump(Hobby.query.all())}        
 
 # User Api
 api.add_resource(UserApi, '/user')
