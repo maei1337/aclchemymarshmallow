@@ -119,36 +119,49 @@ class UserApi(Resource):
     def get(self):
         data = request.get_json(silent=True)
 
-        user = User.find_by_userid(data["id"])
+        try:
+            user = User.find_by_userid(data["id"])
 
-        if user:
-            return {'message': user_schema.dump(user)}, 200   
-        return {'message': 'no user was found'}, 500
+            if user:
+                return {'message': user_schema.dump(user)}, 200   
+            return {'message': 'no user was found'}, 500
+        
+        except:
+            return {'message': 'sth went wrong'}, 500
 
     def post(self):
         data = request.get_json(silent=True)
-        new_user = {
-            "username": data["username"],
-            "lastname": data["lastname"],
-            "reward": [],
-            "hobby": []
-        }
-        # create a new User Object
-        user = user_schema.load(new_user) 
-        user.save_to_db()        
+        
+        try: 
+            new_user = {
+                "username": data["username"],
+                "lastname": data["lastname"],
+                "reward": [],
+                "hobby": []
+            }
+            # create a new User Object
+            user = user_schema.load(new_user) 
+            user.save_to_db()        
 
-        # Read all List items and create new Reward Object and store it to DB
-        [Reward(name=item, user_id=user.id).save_to_db() for item in data["reward"]]
+            # Read all List items and create new Reward Object and store it to DB
+            [Reward(name=item, user_id=user.id).save_to_db() for item in data["reward"]]
 
-        [Hobby(hobby=item, user_id=user.id).save_to_db() for item in data["hobby"]]
+            [Hobby(hobby=item, user_id=user.id).save_to_db() for item in data["hobby"]]
+        
+        except:
+            return {'message': 'sth went wrong'}, 500
         
         return {'message': user_schema.dump(user)}, 200     
 
     def delete(self):
-        data = request.get_json(silent=True)
+        try:
+            data = request.get_json(silent=True)
 
-        user = User.find_by_userid(data["id"])
-        user.delete_from_db()
+            user = User.find_by_userid(data["id"])
+            user.delete_from_db()
+        
+        except:
+            return {'message': 'sth went wrong'}, 500
 
         return {'message': "user gelöscht"}, 200            
 
