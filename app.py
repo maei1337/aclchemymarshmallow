@@ -4,6 +4,7 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_script import Manager
 from flask_migrate import Migrate
 from flask_marshmallow import Marshmallow, Schema, fields
+from marshmallow import Schema, fields
 
 app = Flask(__name__)
 api = Api(app)
@@ -64,17 +65,17 @@ class Reward(db.Model):
 #####
 # SCHEMA
 #####
-class RewardSchema(ma.Schema):
+class RewardSchema(ma.ModelSchema):
     class Meta:
-        model: Reward
+        model = Reward
         fields = ('name',)
         ordered = True
 
-class UserSchema(ma.Schema):
-    reward = ma.Nested('RewardSchema', only='name', many=True)
+class UserSchema(ma.ModelSchema):
+    reward = fields.Pluck('RewardSchema', 'name', many=True)
     class Meta:
-        model: User
-        fields = ('id', 'username', 'lastname', 'reward',)    
+        model = User
+        fields = ('id', 'username', 'lastname', 'reward',)
 
 
 ############################
@@ -82,6 +83,10 @@ class UserSchema(ma.Schema):
 ############################
 user_schema = UserSchema()
 user_schema_list = UserSchema(many=True)
+
+# reward_schema = RewardSchema()
+# reward_schema_list = RewardSchema(many=True)
+
 
 #####
 # REST
@@ -93,24 +98,24 @@ class UserApi(Resource):
         user = User.find_by_username(search_item["username"])
 
         if user:
-            return {'message': user.user_json()}, 200   
+            return {'message': user_schema.dump(user)}, 200   
         return {'message': 'no user was found'}, 500
 
     def post(self):
-        data = request.get_json(silent=True)
-
-        user_data = user_schema.load(data) 
-
-        #user_data.save_to_db()
-        return {'message': user_schema.dump(user_data)}, 200
-        # try:
-        #     new_user = User(**data)
-        #     new_user.save_to_db()
-        # except:
-        #     return {'message': 'user with this name already exist'}, 500   
-
-        # return {'message': new_user.user_json()}, 200
-
+        data = request.get_json()
+        new_user = {
+            "username": data["username"],
+            "lastname": data["lastname"],
+            "reward": []
+        }
+        user = user_schema.load(new_user) 
+        user.save_to_db()        
+                
+        for x in data["reward"]:
+            new_reward = Reward(name=x, user_id=user.id)
+            new_reward.save_to_db()
+        
+        return {'message': user_schema.dump(user)}, 200       
 
 class getAllUsers(Resource):
     def get(self):
