@@ -1,3 +1,4 @@
-__pycache__/
-test.db
-migrations/
+*
+!.gitignore
+!app.py
+!requirements.txt
