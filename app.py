@@ -131,16 +131,17 @@ class UserApi(Resource):
 
     def post(self):
         data = request.get_json(silent=True)
-        
-        try: 
-            new_user = {
-                "username": data["username"],
-                "lastname": data["lastname"],
-                "reward": [],
-                "hobby": []
+
+        new_user = {
+            "username": data["username"],
+            "lastname": data["lastname"],
+            "reward": [],
+            "hobby": []
             }
+
+        try:
             # create a new User Object
-            user = user_schema.load(new_user) 
+            user = user_schema.load(new_user)
             user.save_to_db()        
 
             # Read all List items and create new Reward Object and store it to DB
